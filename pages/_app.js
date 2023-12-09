@@ -4,10 +4,9 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import user from '../reducers/user';
 import favCities from '../reducers/favCities';
-import defaultCities from '../reducers/defaultCities';
 
 const store = configureStore({
-  reducer: {user, favCities, defaultCities},
+  reducer: {user, favCities},
 });
 
 function App({ Component, pageProps }) {

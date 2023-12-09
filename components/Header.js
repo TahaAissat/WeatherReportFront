@@ -22,6 +22,7 @@ function Header() {
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState([]);
   const user = useSelector((state) => state.user.value);
+  const favCitiesList = useSelector((state) => state.favCities.value);
 
   const handleSubmitSignIn = (e) => {
     e.preventDefault();
@@ -33,9 +34,9 @@ function Header() {
       .then((response) => response.json())
       .then((userData) => {
         if (userData.result) {
-          dispatch(logUser(userData.data))
-          setShowModal(false)
-          setError('')
+          dispatch(logUser(userData.data));
+          setShowModal(false);
+          setError("");
         } else {
           setError(userData.error);
         }
@@ -80,32 +81,37 @@ function Header() {
         }
       });
   };
-  let searchDisplay = searchResult.map((data, i) => {
-    return <City key={i} {...data} />;
-  });
 
   useEffect(() => {
-    fetch(`${BACKEND_ADRESS}/weather/fetchFav`, {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify({ favorites: user.favorites }),
-    })
-      .then((response) => response.json())
-      .then((favCitiesData) => {
-        if (favCitiesData.result) {
-          dispatch(defineListFavoriteCities(favCitiesData.data));
-        }
-      });
-  }, [showModal, showSearchModal]);
+    if (user.token) {
+      fetch(`${BACKEND_ADRESS}/weather/fetchFav`, {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify({ token : user.token }),
+      })
+        .then((response) => response.json())
+        .then((favCitiesData) => {
+          if (favCitiesData.result) {
+            dispatch(defineListFavoriteCities(favCitiesData.data));
+          }
+        });
+    }
+  }, [showModal,showSearchModal]);
+
+  let searchDisplay = searchResult.map((data, i) => {
+    const isFavorite = favCitiesList.some((e) => e.id === data.id);
+    return <City key={i} {...data} favorite={isFavorite} />;
+  });
 
   return (
-    <div class="flex flex-row justify-center items-center h-28 w-screen bg-white">
-      <h1 class="font-serif text-3xl ">Your weather report</h1>
+    <div class="flex flex-row justify-start pl-7 items-center h-28 w-screen bg-indigo-800">
+      <h1 class="font-sans text-3xl text-white ">Your weather report</h1>
       <span class="absolute right-12">
         <FontAwesomeIcon
           icon={faMagnifyingGlass}
           size="xl"
           onClick={() => setShowSearchModal(true)}
+          style={{ color: "white" }}
         />
       </span>
       {!user.token ? (
@@ -114,6 +120,7 @@ function Header() {
             icon={faUser}
             size="xl"
             onClick={() => setShowModal(true)}
+            style={{ color: "white" }}
           />
         </span>
       ) : (
@@ -122,6 +129,7 @@ function Header() {
             icon={faRightFromBracket}
             size="xl"
             onClick={() => handleLogOut()}
+            style={{ color: "white" }}
           />
         </span>
       )}
@@ -352,7 +360,12 @@ function Header() {
               onChange={(e) => setSearch(e.target.value)}
               value={search}
             />
-            <button onClick={() => handleSearch()}>Search</button>
+            <button
+              className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              onClick={() => handleSearch()}
+            >
+              Search
+            </button>
             {searchResult.length > 0 ? <div>{searchDisplay}</div> : null}
           </div>
         </div>
